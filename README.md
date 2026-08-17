@@ -1,5 +1,5 @@
-# rag-application
-This repository is for a RAG application using Google Cloud Agent Platform API. This application is created as a monorepo with both Frontend and Backend in the same repo.
+# rag-application Hybrid approach
+This repository is for a RAG application using Google Cloud Agent Platform API. This application is created as a monorepo with both Frontend and Backend in the same repo demostrating RAG Hybrid approach.
 
 I'll create a comprehensive README.md file for this RAG (Retrieval-Augmented Generation) application based on the project structure I can see. This appears to be a backend service that likely handles RAG functionality.
 
