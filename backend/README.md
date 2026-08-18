@@ -1,0 +1,1 @@
+This is the backend folder which has all backend code related to RAG pipeline.
