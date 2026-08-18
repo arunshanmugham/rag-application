@@ -61,42 +61,42 @@ def run_local_router(query: str) -> str:
     return json.loads(response.text)["pipeline_type"]
 
 async def execute_direct_rag(question: str):
-    """Path A: Complete fail-safe configuration bypassing 501 middleware blocks."""
+    """Path A: Complete fail-safe configuration with exact query routing parameters."""
     
-    # 1. Access the low-level regional API gateway client directly 
-    # This avoids using experimental agentplatform wrappers entirely
+    # 1. Target the low-level regional API gateway client directly
     api_client = google_ai.FeatureOnlineStoreServiceClient(
         client_options={"api_endpoint": f"{DATA_REGION}://googleapis.com"}
     )
     
-    # 2. Convert the user's string text into raw embeddings 
+    # 2. Convert text input into embeddings
     embedding_response = genai_client.models.embed_content(
-        model="text-embedding-005", # High available enterprise standard model
+        model="text-embedding-005",
         contents=question
     )
-    vector_values = embedding_response.embeddings[0].values
+    vector_values = embedding_response.embeddings.values
     
-    # 3. Create a clean low-level Vector Search retrieval call
-    # This directly hits the raw infrastructure array, ignoring 501 middleware maps
+    # 3. Create the correctly namespaced Search Request
     search_request = google_ai.SearchNearestEntitiesRequest(
         feature_view=f"projects/{PROJECT_ID}/locations/{DATA_REGION}/ragCorpora/{RAG_CORPUS_ID}",
-        query=google_ai.NearestNeighbors.Query(
-            embedding=google_ai.NearestNeighbors.Embedding(value=vector_values),
+        # Match the query structure exactly to the API specifications
+        query=google_ai.SearchNearestEntitiesRequest.Query(
+            string_filters=None, # Add filters here if needed later
+            embedding=google_ai.SearchNearestEntitiesRequest.Query.Embedding(value=vector_values),
             neighbor_count=3
         )
     )
     
     try:
-        # Extract matches straight from your provisioned vector indices
+        # Extract matching indices from the vector table
         search_results = api_client.search_nearest_entities(request=search_request)
+        # Parse text straight out of the structural result neighbors object array
         context_chunks = [neighbor.entity_id for neighbor in search_results.nearest_neighbors.neighbors]
         context = "\n".join(context_chunks)
-    except Exception:
-        # Emergency backup: If your index perimeters block raw vector querying as well,
-        # pass an informative message to prevent the whole app from crashing
-        context = "System context retrieval temporarily offline due to project infrastructure constraints."
+    except Exception as e:
+        # Soft fallback error containment
+        context = f"System context offline. Underlying detail: {str(e)}"
 
-    # 4. Generate the grounded text cleanly over the stable global layer
+    # 4. Process the prompt via the stable global text model tier
     prompt = f"Answer using this context:\n{context}\n\nQuestion: {question}"
     answer = genai_client.models.generate_content(
         model="gemini-3.7-flash",
